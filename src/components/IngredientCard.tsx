@@ -5,10 +5,9 @@ type IngredientCardProps = {
   name: string;
   isSelected: boolean;
   onSelect: (name: string) => void;
-  isMultiSelect?: boolean;
 };
 
-export default function IngredientCard({ name, isSelected, onSelect, isMultiSelect = false }: IngredientCardProps) {
+export default function IngredientCard({ name, isSelected, onSelect }: IngredientCardProps) {
   return (
     <button
       onClick={() => onSelect(name)}

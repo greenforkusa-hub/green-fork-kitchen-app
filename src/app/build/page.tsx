@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { menuData, steps } from '@/lib/data';
 import IngredientCard from '@/components/IngredientCard';
 
-// We are defining the "shape" of our bowl state here for TypeScript
+// We define the "shape" of our bowl state here for TypeScript
 interface BowlState {
   size: string | null;
   base: string | null;
@@ -32,19 +32,16 @@ export default function BuildPage() {
 
   const currentStepKey = steps[currentStep].toLowerCase() as keyof BowlState;
   const options = menuData[currentStepKey as keyof typeof menuData] || [];
-  const isMultiSelect = ['veggies', 'boosts', 'toppings'].includes(currentStepKey);
 
   const handleSelect = (name: string) => {
     setBowl(prevBowl => {
         const currentSelection = prevBowl[currentStepKey];
         if (Array.isArray(currentSelection)) {
-            // Handle multi-select categories (veggies, boosts, toppings)
             const newSelection = currentSelection.includes(name)
                 ? currentSelection.filter((item: string) => item !== name)
                 : [...currentSelection, name];
             return { ...prevBowl, [currentStepKey]: newSelection };
         } else {
-            // Handle single-select categories
             return { ...prevBowl, [currentStepKey]: name };
         }
     });
@@ -54,7 +51,6 @@ export default function BuildPage() {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Filter out any empty arrays before creating the query string
       const finalBowl: { [key: string]: any } = {};
       for (const key in bowl) {
         const value = bowl[key as keyof BowlState];

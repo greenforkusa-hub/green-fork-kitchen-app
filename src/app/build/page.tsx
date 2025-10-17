@@ -6,10 +6,21 @@ import { useRouter } from 'next/navigation';
 import { menuData, steps } from '@/lib/data';
 import IngredientCard from '@/components/IngredientCard';
 
+// We are defining the "shape" of our bowl state here for TypeScript
+interface BowlState {
+  size: string | null;
+  base: string | null;
+  veggies: string[];
+  protein: string | null;
+  boosts: string[];
+  sauce: string | null;
+  toppings: string[];
+}
+
 export default function BuildPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
-  const [bowl, setBowl] = useState<any>({
+  const [bowl, setBowl] = useState<BowlState>({ // We use our new BowlState type here
     size: null,
     base: null,
     veggies: [],
@@ -17,30 +28,43 @@ export default function BuildPage() {
     boosts: [],
     sauce: null,
     toppings: [],
-  });
+});
 
-  const currentStepKey = steps[currentStep].toLowerCase();
+  const currentStepKey = steps[currentStep].toLowerCase() as keyof BowlState;
   const options = menuData[currentStepKey as keyof typeof menuData] || [];
   const isMultiSelect = ['veggies', 'boosts', 'toppings'].includes(currentStepKey);
 
   const handleSelect = (name: string) => {
-    if (isMultiSelect) {
-      const currentSelection = bowl[currentStepKey];
-      const newSelection = currentSelection.includes(name)
-        ? currentSelection.filter((item: string) => item !== name)
-        : [...currentSelection, name];
-      setBowl({ ...bowl, [currentStepKey]: newSelection });
-    } else {
-      setBowl({ ...bowl, [currentStepKey]: name });
-    }
-  };
+    setBowl(prevBowl => {
+        const currentSelection = prevBowl[currentStepKey];
+        if (Array.isArray(currentSelection)) {
+            // Handle multi-select categories (veggies, boosts, toppings)
+            const newSelection = currentSelection.includes(name)
+                ? currentSelection.filter((item: string) => item !== name)
+                : [...currentSelection, name];
+            return { ...prevBowl, [currentStepKey]: newSelection };
+        } else {
+            // Handle single-select categories
+            return { ...prevBowl, [currentStepKey]: name };
+        }
+    });
+};
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Navigate to summary page, passing the bowl data
-      const query = new URLSearchParams(bowl).toString();
+      // Filter out any empty arrays before creating the query string
+      const finalBowl: { [key: string]: any } = {};
+      for (const key in bowl) {
+        const value = bowl[key as keyof BowlState];
+        if (Array.isArray(value) && value.length > 0) {
+            finalBowl[key] = value.join(',');
+        } else if (value && !Array.isArray(value)) {
+            finalBowl[key] = value;
+        }
+      }
+      const query = new URLSearchParams(finalBowl).toString();
       router.push(`/summary?${query}`);
     }
   };
@@ -50,6 +74,14 @@ export default function BuildPage() {
       setCurrentStep(currentStep - 1);
     }
   };
+
+  const isSelected = (name: string) => {
+    const selection = bowl[currentStepKey];
+    if (Array.isArray(selection)) {
+        return selection.includes(name);
+    }
+    return selection === name;
+  }
 
   return (
     <main className="flex flex-col items-center min-h-screen bg-green-50/50 p-4">
@@ -64,9 +96,8 @@ export default function BuildPage() {
             <IngredientCard
               key={name}
               name={name}
-              isSelected={isMultiSelect ? bowl[currentStepKey].includes(name) : bowl[currentStepKey] === name}
+              isSelected={isSelected(name)}
               onSelect={handleSelect}
-              isMultiSelect={isMultiSelect}
             />
           ))}
         </div>

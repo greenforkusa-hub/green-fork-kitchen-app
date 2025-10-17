@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { menuData, steps } from '@/lib/data';
 import IngredientCard from '@/components/IngredientCard';
 
-// We define the "shape" of our bowl state here for TypeScript
+// Define the "shape" of our bowl state for TypeScript
 interface BowlState {
   size: string | null;
   base: string | null;
@@ -20,7 +20,7 @@ interface BowlState {
 export default function BuildPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
-  const [bowl, setBowl] = useState<BowlState>({ // We use our new BowlState type here
+  const [bowl, setBowl] = useState<BowlState>({
     size: null,
     base: null,
     veggies: [],
